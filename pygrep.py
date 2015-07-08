@@ -17,9 +17,14 @@ def grep(filename_pattern, keyword):
         matched_files = filter(lambda x: fnmatch(x, filename_pattern), files)
 
         for filename in matched_files:
-            with open(os.path.join(SCRIPT_DIR, root, filename)) as file:
-                for number, line in grep_file(file, keyword):
-                    print("{}:{}: {}".format(filename, number, line.rstrip()))
+
+            file_fullpath = os.path.join(SCRIPT_DIR, root, filename)
+            with open(file_fullpath) as file:
+                try:
+                    for number, line in grep_file(file, keyword):
+                        print("{}:{}: {}".format(file_fullpath, number, line.rstrip()))
+                except UnicodeDecodeError:
+                    print(file_fullpath, " seems to be binary, skipping")
 
 
 if __name__ == '__main__':
