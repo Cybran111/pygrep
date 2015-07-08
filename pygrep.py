@@ -22,7 +22,11 @@ def grep(filename_pattern, keyword):
             with open(file_fullpath) as file:
                 try:
                     for number, line in grep_file(file, keyword):
-                        print("{}:{}: {}".format(file_fullpath, number, line.rstrip()))
+                        print("{}:{}: {}".format(
+                            file_fullpath,
+                            number,
+                            line.rstrip()
+                        ))
                 except UnicodeDecodeError:
                     print(file_fullpath, " seems to be binary, skipping")
 
