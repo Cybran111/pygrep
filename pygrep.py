@@ -13,7 +13,7 @@ def grep(filepath, keyword):
             if keyword in line:
                 yield line_number, line
     except UnicodeDecodeError:
-        pass
+        yield 0, 'seems to be binary, skipping'
 
 
 def get_files(search_dir):
