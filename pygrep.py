@@ -5,43 +5,42 @@ from fnmatch import fnmatch
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def grep_file(file, keyword):
-    for number, line in enumerate(file, start=1):
-        if keyword in line:
-            yield number, line
-
-def get_filepath(root, filenames):
-    for filename in filenames:
-        yield os.path.join(root, filename)
-
-
-def get_file(filenames):
-    for filename in filenames:
-        yield open(filename), filename
-
-def get_matches(filename_pattern):
-    for root, dirs, files in os.walk(SCRIPT_DIR):
-        # Filtering files by matching a pattern
-        yield filter(lambda x: fnmatch(x, filename_pattern), files)
+def grep(filepath, keyword):
+    file = open(filepath)
+    try:
+        for line_number, line in enumerate(file, start=1):
+            if keyword in line:
+                yield line_number, line
+    except UnicodeDecodeError:
+        pass
 
 
-def grep(filename_pattern, keyword):
-    for root, dirs, files in os.walk(SCRIPT_DIR):
-        # Filtering files by matching a pattern
-        matched_files = filter(lambda x: fnmatch(x, filename_pattern), files)
+def get_files(search_dir):
+    for currect_dir, dirs, files in os.walk(search_dir):
+        yield from ((currect_dir, file) for file in files)
 
-        for file, filename in get_file(get_filepath(root, matched_files)):
-            try:
-                for number, line in grep_file(file, keyword):
-                    print("{}:{}: {}".format(
-                        filename,
-                        number,
-                        line.rstrip()
-                    ))
-            except UnicodeDecodeError:
-                    print(filename, "seems to be binary, skipping")
+
+def file_filter(pattern, files):
+    for path, name in files:
+        if fnmatch(name, pattern):
+            yield path, name
+
+
+def files_grep(pattern, keyword, root):
+    all_files = get_files(root)  # returns (path, filename)
+    for path, name in file_filter(pattern, all_files):
+        filepath = os.path.join(path, name)
+        yield from ((filepath, n, t) for n, t in grep(filepath, keyword))
+
+
+def get_matched_lines(pattern, keyword, root=SCRIPT_DIR):
+    for filename, number, line in files_grep(pattern, keyword, root):
+        yield "{}:{}: {}".format(filename,
+                                 number,
+                                 line.rstrip())
 
 
 if __name__ == '__main__':
     _, pattern, word = sys.argv
-    grep(pattern, word)
+    for line in get_matched_lines(pattern, word):
+        print(line)
